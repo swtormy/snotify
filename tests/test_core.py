@@ -4,12 +4,14 @@ from snotify.core import Notifier
 from snotify.channels.base import BaseChannel, BaseRecipient
 from typing import List
 
+
 class MockChannel(BaseChannel):
     async def send(self, message: str, recipients: List[BaseRecipient] = None):
         pass
 
     def validate_config(self):
         pass
+
 
 class MockRecipient(BaseRecipient):
     def get_recipient_id(self) -> str:
@@ -18,19 +20,23 @@ class MockRecipient(BaseRecipient):
     def get_recipient_name(self) -> str:
         return "Mock Recipient"
 
+
 @pytest.fixture
 def notifier():
     return Notifier()
 
+
 @pytest.fixture
 def mock_recipient():
     return MockRecipient()
+
 
 @pytest.fixture
 def mock_channel(mock_recipient):
     channel = MockChannel(recipients=[mock_recipient])
     channel.send = AsyncMock()
     return channel
+
 
 @pytest.mark.asyncio
 async def test_send_success(notifier, mock_channel, mock_recipient):
@@ -40,9 +46,9 @@ async def test_send_success(notifier, mock_channel, mock_recipient):
     await notifier.send("Test message")
 
     mock_channel.send.assert_called_once_with(
-        message="Test message",
-        recipients=[mock_recipient]
+        message="Test message", recipients=[mock_recipient]
     )
+
 
 @pytest.mark.asyncio
 async def test_send_failure(notifier, mock_channel):
@@ -52,6 +58,7 @@ async def test_send_failure(notifier, mock_channel):
 
     with pytest.raises(RuntimeError, match="All notification channels failed."):
         await notifier.send("Test message")
+
 
 @pytest.mark.asyncio
 async def test_fallback_order(notifier, mock_channel, mock_recipient):
@@ -67,6 +74,5 @@ async def test_fallback_order(notifier, mock_channel, mock_recipient):
 
     mock_channel.send.assert_called_once()
     second_channel.send.assert_called_once_with(
-        message="Test message",
-        recipients=[mock_recipient]
+        message="Test message", recipients=[mock_recipient]
     )

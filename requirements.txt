@@ -11,8 +11,4 @@ multidict==6.1.0
 packaging==24.2
 pluggy==1.5.0
 propcache==0.2.0
-pytest==8.3.3
-pytest-asyncio==0.24.0
-python-dotenv==1.0.1
-setuptools==75.5.0
 yarl==1.17.2

@@ -138,3 +138,4 @@ cython_debug/
 
 server.py
 example.py
+.pypirc

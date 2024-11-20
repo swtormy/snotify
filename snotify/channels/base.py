@@ -21,7 +21,7 @@ class BaseRecipient(ABC):
     @abstractmethod
     def get_recipient_name(self) -> str:
         pass
-    
+
 
 class BaseChannel(ABC):
     """
@@ -39,6 +39,7 @@ class BaseChannel(ABC):
     validate_config()
         Validates the channel's configuration.
     """
+
     def __init__(self, recipients: List[BaseRecipient]):
         self.recipients = recipients
 

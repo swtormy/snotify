@@ -3,6 +3,7 @@ import aiohttp
 from .base import BaseChannel, BaseRecipient
 import logging
 
+
 class WebhookChannel(BaseChannel):
     """
     A class for sending notifications via Webhook.
@@ -23,6 +24,7 @@ class WebhookChannel(BaseChannel):
     validate_config()
         Validates the Webhook URL.
     """
+
     def __init__(self, webhook_url: str, recipients: List[BaseRecipient]):
         super().__init__(recipients)
         self.webhook_url = webhook_url
@@ -44,7 +46,8 @@ class WebhookChannel(BaseChannel):
 
     def validate_config(self):
         if not self.webhook_url:
-            raise ValueError("Webhook URL is required") 
+            raise ValueError("Webhook URL is required")
+
 
 class WebhookRecipient(BaseRecipient):
     """
@@ -66,6 +69,7 @@ class WebhookRecipient(BaseRecipient):
     get_recipient_name() -> str
         Returns the recipient's name.
     """
+
     def __init__(self, name: str, identifier: str):
         self.name = name
         self.identifier = identifier
@@ -74,4 +78,4 @@ class WebhookRecipient(BaseRecipient):
         return self.identifier
 
     def get_recipient_name(self) -> str:
-        return self.name 
+        return self.name

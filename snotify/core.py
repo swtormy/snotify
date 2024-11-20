@@ -2,10 +2,11 @@ import logging
 from typing import List
 from .channels.base import BaseChannel, BaseRecipient
 
+
 def configure_logging(level=logging.INFO):
     """
     Configures logging for the entire snotify library.
-    
+
     Parameters
     ----------
     level : int
@@ -20,9 +21,10 @@ def configure_logging(level=logging.INFO):
     >>> logging.disable(logging.CRITICAL)
     """
     logging.basicConfig(level=level)
-    logging.getLogger('snotify.channels.email').setLevel(level)
-    logging.getLogger('snotify.channels.telegram').setLevel(level)
-    logging.getLogger('snotify.core').setLevel(level)
+    logging.getLogger("snotify.channels.email").setLevel(level)
+    logging.getLogger("snotify.channels.telegram").setLevel(level)
+    logging.getLogger("snotify.core").setLevel(level)
+
 
 class Notifier:
     """
@@ -53,6 +55,7 @@ class Notifier:
     >>> notifier.set_fallback_order(["email", "telegram"])  # Optional
     >>> await notifier.send("Hello, World!")
     """
+
     def __init__(self):
         self.channels = []
         self.fallback_order = []
@@ -80,26 +83,34 @@ class Notifier:
         :param recipients: A list of recipients implementing RecipientInterface. If not specified, channel recipients are used.
         """
         logger = logging.getLogger(__name__)
-        
+
         if not self.fallback_order:
             logger.info("Fallback order is not set. Sending to all channels.")
             for channel_data in self.channels:
                 channel = channel_data["channel"]
                 try:
-                    await channel.send(message=message, recipients=recipients or channel.recipients)
-                    logger.info(f"Message sent successfully via {channel_data['name']}.")
+                    await channel.send(
+                        message=message, recipients=recipients or channel.recipients
+                    )
+                    logger.info(
+                        f"Message sent successfully via {channel_data['name']}."
+                    )
                 except Exception as e:
                     logger.error(f"Failed to send via {channel_data['name']}: {e}")
         else:
             for name in self.fallback_order:
-                channel_data = next((ch for ch in self.channels if ch["name"] == name), None)
+                channel_data = next(
+                    (ch for ch in self.channels if ch["name"] == name), None
+                )
                 if not channel_data:
                     logger.warning(f"Channel {name} not found in added channels.")
                     continue
 
                 channel = channel_data["channel"]
                 try:
-                    await channel.send(message=message, recipients=recipients or channel.recipients)
+                    await channel.send(
+                        message=message, recipients=recipients or channel.recipients
+                    )
                     logger.info(f"Message sent successfully via {name}.")
                     break
                 except Exception as e:

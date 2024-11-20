@@ -3,6 +3,7 @@ import aiohttp
 from .base import BaseChannel, BaseRecipient
 import logging
 
+
 class TelegramChannel(BaseChannel):
     """
     A class for sending notifications via Telegram using a bot.
@@ -23,6 +24,7 @@ class TelegramChannel(BaseChannel):
     validate_config()
         Validates the bot token and recipients list.
     """
+
     def __init__(self, bot_token: str, recipients: List[BaseRecipient]):
         super().__init__(recipients)
         self.bot_token = bot_token
@@ -70,6 +72,7 @@ class TelegramRecipient(BaseRecipient):
     get_recipient_name() -> str
         Returns the recipient's name.
     """
+
     def __init__(self, name: str, chat_id: str):
         self.name = name
         self.chat_id = chat_id

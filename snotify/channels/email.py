@@ -31,17 +31,30 @@ class EmailChannel(BaseChannel):
     validate_config()
         Validates the SMTP configuration.
     """
-    def __init__(self, smtp_server: str, smtp_port: int, smtp_user: str, smtp_password: str, recipients: List[BaseRecipient]):
+
+    def __init__(
+        self,
+        smtp_server: str,
+        smtp_port: int,
+        smtp_user: str,
+        smtp_password: str,
+        recipients: List[BaseRecipient],
+    ):
         super().__init__(recipients)
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
         self.smtp_user = smtp_user
         self.smtp_password = smtp_password
 
-    async def send(self, message: str, subject: str = "Notification", recipients: List[BaseRecipient] = None):
+    async def send(
+        self,
+        message: str,
+        subject: str = "Notification",
+        recipients: List[BaseRecipient] = None,
+    ):
         logger = logging.getLogger(__name__)
         recipients_to_use = recipients if recipients is not None else self.recipients
-        
+
         for recipient in recipients_to_use:
             email = EmailMessage()
             email["From"] = self.smtp_user
@@ -57,16 +70,20 @@ class EmailChannel(BaseChannel):
                     username=self.smtp_user,
                     password=self.smtp_password,
                 )
-                logger.info(f"✅ Sent email to {recipient.get_recipient_name()} ({recipient.get_recipient_id()})")
+                logger.info(
+                    f"✅ Sent email to {recipient.get_recipient_name()} ({recipient.get_recipient_id()})"
+                )
             except Exception as e:
                 error_msg = f"Failed to send email to {recipient.get_recipient_name()}: {str(e)}"
                 logger.error(f"❌ {error_msg}")
                 raise RuntimeError(error_msg)
 
     def validate_config(self):
-        if not all([self.smtp_server, self.smtp_port, self.smtp_user, self.smtp_password]):
+        if not all(
+            [self.smtp_server, self.smtp_port, self.smtp_user, self.smtp_password]
+        ):
             raise ValueError("SMTP configuration is incomplete")
-        
+
 
 class EmailRecipient(BaseRecipient):
     """
@@ -88,6 +105,7 @@ class EmailRecipient(BaseRecipient):
     get_recipient_name() -> str
         Returns the recipient's name.
     """
+
     def __init__(self, name: str, email: str):
         self.name = name
         self.email = email
