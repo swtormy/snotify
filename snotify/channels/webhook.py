@@ -1,7 +1,13 @@
-from typing import List
+from typing import List, Union
 import aiohttp
 from .base import BaseChannel, BaseRecipient
 import logging
+
+
+class WebhookRecipientTypeError(TypeError):
+    """Custom exception for invalid recipient types."""
+
+    pass
 
 
 class WebhookChannel(BaseChannel):
@@ -14,8 +20,8 @@ class WebhookChannel(BaseChannel):
     ----------
     webhook_url : str
         The URL of the Webhook.
-    recipients : List[BaseRecipient]
-        A list of recipient objects implementing the BaseRecipient interface.
+    recipients : Union[List[BaseRecipient], List[str]]
+        A list of recipient objects implementing the BaseRecipient interface or other identifiers in str format.
 
     Methods
     -------
@@ -25,14 +31,20 @@ class WebhookChannel(BaseChannel):
         Validates the Webhook URL.
     """
 
-    def __init__(self, webhook_url: str, recipients: List[BaseRecipient]):
+    def __init__(
+        self, webhook_url: str, recipients: Union[List[BaseRecipient], List[str]]
+    ):
         super().__init__(recipients)
         self.webhook_url = webhook_url
+        self.validate_config()
 
     async def send(self, message: str, recipients: List[BaseRecipient] = None):
         logger = logging.getLogger(__name__)
         recipients_to_use = recipients if recipients is not None else self.recipients
         for recipient in recipients_to_use:
+            if isinstance(recipient, str):
+                recipient = WebhookRecipient(name=recipient, identifier=recipient)
+
             payload = {"recipient": recipient.get_recipient_id(), "message": message}
 
             async with aiohttp.ClientSession() as session:
@@ -40,13 +52,22 @@ class WebhookChannel(BaseChannel):
                     if response.status == 200:
                         logger.info(f"✅ Sent to {recipient.get_recipient_name()}")
                     else:
-                        error_msg = f"Failed to send to {recipient.get_recipient_name()}: {await response.text()}"
+                        error_msg = (
+                            f"Failed to send to {recipient.get_recipient_name()}"
+                        )
                         logger.error(f"❌ {error_msg}")
                         raise RuntimeError(error_msg)
 
     def validate_config(self):
         if not self.webhook_url:
             raise ValueError("Webhook URL is required")
+        for recipient in self.recipients:
+            if not isinstance(recipient, WebhookRecipient) and not isinstance(
+                recipient, str
+            ):
+                raise WebhookRecipientTypeError(
+                    f"The {recipient} recipient must be either str or WebhookRecipient"
+                )
 
 
 class WebhookRecipient(BaseRecipient):

@@ -136,6 +136,7 @@ cython_debug/
 # VS Code
 .vscode/
 
+main.py
 server.py
 example.py
 .pypirc

@@ -51,13 +51,30 @@ async def test_send_success(notifier, mock_channel, mock_recipient):
 
 
 @pytest.mark.asyncio
-async def test_send_failure(notifier, mock_channel):
+async def test_send_failure_without_fallback(notifier, mock_channel):
     mock_channel.send.side_effect = Exception("Send failed")
     notifier.add_channel(mock_channel, "mock")
-    notifier.set_fallback_order(["mock"])
 
-    with pytest.raises(RuntimeError, match="All notification channels failed."):
+    with pytest.raises(Exception, match="Send failed"):
         await notifier.send("Test message")
+
+
+@pytest.mark.asyncio
+async def test_send_failure_with_fallback(notifier, mock_channel, mock_recipient):
+    second_channel = MockChannel(recipients=[mock_recipient])
+    second_channel.send = AsyncMock()
+    mock_channel.send.side_effect = Exception("Send failed")
+
+    notifier.add_channel(mock_channel, "mock")
+    notifier.add_channel(second_channel, "second")
+    notifier.set_fallback_order(["mock", "second"])
+
+    await notifier.send("Test message")
+
+    mock_channel.send.assert_called_once()
+    second_channel.send.assert_called_once_with(
+        message="Test message", recipients=[mock_recipient]
+    )
 
 
 @pytest.mark.asyncio

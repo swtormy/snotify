@@ -23,6 +23,7 @@ def configure_logging(level=logging.INFO):
     logging.basicConfig(level=level)
     logging.getLogger("snotify.channels.email").setLevel(level)
     logging.getLogger("snotify.channels.telegram").setLevel(level)
+    logging.getLogger("snotify.channels.webhook").setLevel(level)
     logging.getLogger("snotify.core").setLevel(level)
 
 
@@ -95,8 +96,8 @@ class Notifier:
                     logger.info(
                         f"Message sent successfully via {channel_data['name']}."
                     )
-                except Exception as e:
-                    logger.error(f"Failed to send via {channel_data['name']}: {e}")
+                except Exception:
+                    raise
         else:
             for name in self.fallback_order:
                 channel_data = next(
@@ -114,8 +115,6 @@ class Notifier:
                     logger.info(f"Message sent successfully via {name}.")
                     break
                 except Exception as e:
-                    logger.error(f"Failed to send via {name}: {e}")
-                    continue
+                    logger.error(f"Failed to send message via {name}: {e}")
             else:
-                logger.critical("All notification channels failed.")
                 raise RuntimeError("All notification channels failed.")

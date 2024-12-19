@@ -29,8 +29,8 @@ class BaseChannel(ABC):
 
     Parameters
     ----------
-    recipients : List[BaseRecipient]
-        A list of recipient objects implementing the BaseRecipient interface.
+    recipients : Union[List[BaseRecipient], List[str]]
+        A list of recipient objects implementing the BaseRecipient interface or a list of recipient identifiers.
 
     Methods
     -------
