@@ -16,6 +16,22 @@ pip install snotify
 
 ## Usage Example
 
+### Configuring Logging
+
+```python
+from snotify import configure_logging
+import logging
+
+# Enable debug logging
+configure_logging(logging.DEBUG)
+
+# Or use INFO level (default)
+configure_logging(logging.INFO)
+
+# To disable logging completely
+logging.disable(logging.CRITICAL)
+```
+
 ### Basic Usage
 
 ```python
@@ -25,9 +41,16 @@ from snotify import Notifier, TelegramChannel, EmailChannel
 notifier = Notifier()
 
 # Add a Telegram channel
-telegram_channel = TelegramChannel(bot_token="your_bot_token", recipients=[...])
+telegram_channel = TelegramChannel(bot_token="your_bot_token", recipients=["1234567890"])
 notifier.add_channel(telegram_channel, "telegram")
 
+# Send a notification
+await notifier.send("Your message")
+```
+
+### Using Fallback Mechanism
+
+```python
 # Add an Email channel
 email_channel = EmailChannel(
     smtp_server="smtp.example.com",
@@ -38,13 +61,6 @@ email_channel = EmailChannel(
 )
 notifier.add_channel(email_channel, "email")
 
-# Send a notification
-await notifier.send("Your message")
-```
-
-### Using Fallback Mechanism
-
-```python
 # Set fallback order
 notifier.set_fallback_order(["telegram", "email"])
 
@@ -69,6 +85,8 @@ class CustomChannel(BaseChannel):
     def __init__(self, custom_param, recipients):
         super().__init__(recipients)
         self.custom_param = custom_param
+        self.validate_config()
+
 
     async def send(self, message, recipients=None):
         logger = logging.getLogger(__name__)

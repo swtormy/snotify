@@ -93,3 +93,46 @@ async def test_fallback_order(notifier, mock_channel, mock_recipient):
     second_channel.send.assert_called_once_with(
         message="Test message", recipients=[mock_recipient]
     )
+
+
+@pytest.mark.asyncio
+async def test_add_channel_with_explicit_name(notifier, mock_channel, mock_recipient):
+    notifier.add_channel(mock_channel, "custom_name")
+    notifier.set_fallback_order(["custom_name"])
+
+    await notifier.send("Test message")
+
+    mock_channel.send.assert_called_once_with(
+        message="Test message", recipients=[mock_recipient]
+    )
+
+
+@pytest.mark.asyncio
+async def test_add_channel_with_auto_name(notifier, mock_channel, mock_recipient):
+    notifier.add_channel(mock_channel)
+    notifier.set_fallback_order(["mock"])
+
+    await notifier.send("Test message")
+
+    mock_channel.send.assert_called_once_with(
+        message="Test message", recipients=[mock_recipient]
+    )
+
+
+@pytest.mark.asyncio
+async def test_fallback_with_auto_named_channels(notifier, mock_recipient):
+    first_channel = MockChannel(recipients=[mock_recipient])
+    second_channel = MockChannel(recipients=[mock_recipient])
+    first_channel.send = AsyncMock(side_effect=Exception("Send failed"))
+    second_channel.send = AsyncMock()
+
+    notifier.add_channel(first_channel)
+    notifier.add_channel(second_channel)
+    notifier.set_fallback_order(["mock", "mock_1"])
+
+    await notifier.send("Test message")
+
+    first_channel.send.assert_called_once()
+    second_channel.send.assert_called_once_with(
+        message="Test message", recipients=[mock_recipient]
+    )

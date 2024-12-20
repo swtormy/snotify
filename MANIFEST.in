@@ -73,6 +73,7 @@ exclude .pyre/
 exclude .pytype/
 exclude cython_debug/
 exclude .vscode/
+exclude main.py
 exclude server.py
 exclude example.py
 prune venv*

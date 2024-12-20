@@ -36,7 +36,6 @@ class WebhookChannel(BaseChannel):
     ):
         super().__init__(recipients)
         self.webhook_url = webhook_url
-        self.validate_config()
 
     async def send(self, message: str, recipients: List[BaseRecipient] = None):
         logger = logging.getLogger(__name__)

@@ -61,13 +61,25 @@ class Notifier:
         self.channels = []
         self.fallback_order = []
 
-    def add_channel(self, channel: BaseChannel, name: str):
+    def add_channel(self, channel: BaseChannel, name: str = None):
         """
         Adds a notification channel to the manager.
         :param channel: A channel implementing BaseChannel.
-        :param name: The name of the channel for use in fallback_order.
+        :param name: Optional name of the channel for use in fallback_order.
+                    If not provided, will be auto-generated from channel class name.
         """
         channel.validate_config()
+        if name is None:
+            base_name = channel.__class__.__name__.lower().replace("channel", "")
+            similar_channels = [
+                ch for ch in self.channels if ch["name"].startswith(base_name)
+            ]
+
+            if not similar_channels:
+                name = base_name
+            else:
+                name = f"{base_name}_{len(similar_channels)}"
+
         self.channels.append({"name": name, "channel": channel})
 
     def set_fallback_order(self, order: List[str]):

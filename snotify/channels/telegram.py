@@ -36,7 +36,6 @@ class TelegramChannel(BaseChannel):
     ):
         super().__init__(recipients)
         self.bot_token = bot_token
-        self.validate_config()
 
     async def send(self, message: str, recipients: List[BaseRecipient] = None):
         logger = logging.getLogger(__name__)
