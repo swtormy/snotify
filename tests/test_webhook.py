@@ -37,3 +37,29 @@ async def test_send_uses_provided_recipients(webhook_channel):
     webhook_channel.send.assert_awaited_once_with(
         message=message, recipients=[new_recipient]
     )
+
+
+@pytest.mark.asyncio
+async def test_send_with_string_recipient(webhook_channel):
+    message = "Test message"
+    string_recipient = "other_identifier"
+
+    await webhook_channel.send(message=message, recipients=[string_recipient])
+
+    webhook_channel.send.assert_awaited_once_with(
+        message=message, recipients=[string_recipient]
+    )
+
+
+@pytest.mark.asyncio
+async def test_send_with_mixed_recipients(webhook_channel, webhook_recipient):
+    message = "Test message"
+    string_recipient = "other_identifier"
+
+    await webhook_channel.send(
+        message=message, recipients=[webhook_recipient, string_recipient]
+    )
+
+    webhook_channel.send.assert_awaited_once_with(
+        message=message, recipients=[webhook_recipient, string_recipient]
+    )

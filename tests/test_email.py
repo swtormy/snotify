@@ -39,3 +39,29 @@ async def test_send_uses_provided_recipients(email_channel):
     email_channel.send.assert_awaited_once_with(
         message=message, recipients=[new_recipient]
     )
+
+
+@pytest.mark.asyncio
+async def test_send_with_string_recipient(email_channel):
+    message = "Test message"
+    string_recipient = "test@example.com"
+
+    await email_channel.send(message=message, recipients=[string_recipient])
+
+    email_channel.send.assert_awaited_once_with(
+        message=message, recipients=[string_recipient]
+    )
+
+
+@pytest.mark.asyncio
+async def test_send_with_mixed_recipients(email_channel, email_recipient):
+    message = "Test message"
+    string_recipient = "test@example.com"
+
+    await email_channel.send(
+        message=message, recipients=[email_recipient, string_recipient]
+    )
+
+    email_channel.send.assert_awaited_once_with(
+        message=message, recipients=[email_recipient, string_recipient]
+    )

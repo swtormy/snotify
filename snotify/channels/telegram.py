@@ -1,7 +1,13 @@
-from typing import List
+from typing import List, Union
 import aiohttp
 from .base import BaseChannel, BaseRecipient
 import logging
+
+
+class TelegramRecipientTypeError(TypeError):
+    """Custom exception for invalid recipient types."""
+
+    pass
 
 
 class TelegramChannel(BaseChannel):
@@ -14,8 +20,8 @@ class TelegramChannel(BaseChannel):
     ----------
     bot_token : str
         The token of the Telegram bot.
-    recipients : List[BaseRecipient]
-        A list of recipient objects implementing the BaseRecipient interface.
+    recipients : Union[List[BaseRecipient], List[str]]
+        A list of recipient objects implementing the BaseRecipient interface or user_ids in str format.
 
     Methods
     -------
@@ -25,7 +31,9 @@ class TelegramChannel(BaseChannel):
         Validates the bot token and recipients list.
     """
 
-    def __init__(self, bot_token: str, recipients: List[BaseRecipient]):
+    def __init__(
+        self, bot_token: str, recipients: Union[List[BaseRecipient], List[str]]
+    ):
         super().__init__(recipients)
         self.bot_token = bot_token
 
@@ -33,6 +41,9 @@ class TelegramChannel(BaseChannel):
         logger = logging.getLogger(__name__)
         recipients_to_use = recipients if recipients is not None else self.recipients
         for recipient in recipients_to_use:
+            if isinstance(recipient, str):
+                recipient = TelegramRecipient(name=recipient, chat_id=recipient)
+
             url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
             payload = {"chat_id": recipient.get_recipient_id(), "text": message}
 
@@ -50,6 +61,14 @@ class TelegramChannel(BaseChannel):
             raise ValueError("Telegram bot_token is required")
         if not self.recipients:
             raise ValueError("Telegram recipients are required")
+        for recipient in self.recipients:
+            if not isinstance(recipient, TelegramRecipient) and not isinstance(
+                recipient, str
+            ):
+                raise TelegramRecipientTypeError(
+                    f"The {
+                        recipient} recipient must be either str or TelegramRecipient"
+                )
 
 
 class TelegramRecipient(BaseRecipient):

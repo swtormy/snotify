@@ -35,3 +35,29 @@ async def test_send_uses_provided_recipients(telegram_channel):
     telegram_channel.send.assert_awaited_once_with(
         message=message, recipients=[new_recipient]
     )
+
+
+@pytest.mark.asyncio
+async def test_send_with_string_recipient(telegram_channel):
+    message = "Test message"
+    string_recipient = "987654321"
+
+    await telegram_channel.send(message=message, recipients=[string_recipient])
+
+    telegram_channel.send.assert_awaited_once_with(
+        message=message, recipients=[string_recipient]
+    )
+
+
+@pytest.mark.asyncio
+async def test_send_with_mixed_recipients(telegram_channel, telegram_recipient):
+    message = "Test message"
+    string_recipient = "987654321"
+
+    await telegram_channel.send(
+        message=message, recipients=[telegram_recipient, string_recipient]
+    )
+
+    telegram_channel.send.assert_awaited_once_with(
+        message=message, recipients=[telegram_recipient, string_recipient]
+    )

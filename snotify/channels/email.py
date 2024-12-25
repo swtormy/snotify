@@ -1,8 +1,14 @@
-from typing import List
+from typing import List, Union
 import aiosmtplib
 from email.message import EmailMessage
 from .base import BaseChannel, BaseRecipient
 import logging
+
+
+class EmailRecipientTypeError(TypeError):
+    """Custom exception for invalid recipient types."""
+
+    pass
 
 
 class EmailChannel(BaseChannel):
@@ -21,8 +27,8 @@ class EmailChannel(BaseChannel):
         The username for SMTP authentication.
     smtp_password : str
         The password for SMTP authentication.
-    recipients : List[BaseRecipient]
-        A list of recipient objects implementing the BaseRecipient interface.
+    recipients : Union[List[BaseRecipient], List[str]]
+        A list of recipient objects implementing the BaseRecipient interface or email addresses in str format.
 
     Methods
     -------
@@ -38,7 +44,7 @@ class EmailChannel(BaseChannel):
         smtp_port: int,
         smtp_user: str,
         smtp_password: str,
-        recipients: List[BaseRecipient],
+        recipients: Union[List[BaseRecipient], List[str]],
     ):
         super().__init__(recipients)
         self.smtp_server = smtp_server
@@ -56,6 +62,9 @@ class EmailChannel(BaseChannel):
         recipients_to_use = recipients if recipients is not None else self.recipients
 
         for recipient in recipients_to_use:
+            if isinstance(recipient, str):
+                recipient = EmailRecipient(name=recipient, email=recipient)
+
             email = EmailMessage()
             email["From"] = self.smtp_user
             email["To"] = recipient.get_recipient_id()
@@ -83,6 +92,13 @@ class EmailChannel(BaseChannel):
             [self.smtp_server, self.smtp_port, self.smtp_user, self.smtp_password]
         ):
             raise ValueError("SMTP configuration is incomplete")
+        for recipient in self.recipients:
+            if not isinstance(recipient, EmailRecipient) and not isinstance(
+                recipient, str
+            ):
+                raise EmailRecipientTypeError(
+                    f"The {recipient} recipient must be either str or EmailRecipient"
+                )
 
 
 class EmailRecipient(BaseRecipient):
