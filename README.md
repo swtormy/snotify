@@ -1,10 +1,10 @@
 # snotify
 
-Lightweight notification manager with support for Telegram, email, and custom channels.
+Lightweight notification manager with support for Telegram, email, and custom channels. Supports both synchronous and asynchronous operations.
 
 ## Description
 
-`snotify` is a library for managing notifications that allows sending messages through various channels such as Telegram, email, and custom channels. It supports a fallback mechanism that allows sending messages through alternative channels in case the primary one fails.
+`snotify` is a library for managing notifications that allows sending messages through various channels such as Telegram, email, and custom channels. It supports both synchronous and asynchronous operations, and includes a fallback mechanism that allows sending messages through alternative channels in case the primary one fails.
 
 ## Installation
 
@@ -32,23 +32,44 @@ configure_logging(logging.INFO)
 logging.disable(logging.CRITICAL)
 ```
 
-### Basic Usage
+### Synchronous Usage
 
 ```python
 from snotify import Notifier, TelegramChannel, EmailChannel
 
-# Create an instance of Notifier
+# Create an instance of synchronous Notifier
 notifier = Notifier()
 
 # Add a Telegram channel
 telegram_channel = TelegramChannel(bot_token="your_bot_token", recipients=["1234567890"])
-notifier.add_channel(telegram_channel, "telegram")
+notifier.add_channel(telegram_channel)
 
-# Send a notification
-await notifier.send("Your message")
+# Send a notification synchronously
+notifier.send("Your message")  # This will block until the message is sent
 ```
 
-### Using Fallback Mechanism
+### Asynchronous Usage
+
+```python
+from snotify import ANotifier, TelegramChannel, EmailChannel
+import asyncio
+
+async def send_notification():
+    # Create an instance of asynchronous Notifier
+    notifier = ANotifier()
+
+    # Add a Telegram channel
+    telegram_channel = TelegramChannel(bot_token="your_bot_token", recipients=["1234567890"])
+    notifier.add_channel(telegram_channel)
+
+    # Send a notification asynchronously
+    await notifier.send("Your message")
+
+# Run the async function
+asyncio.run(send_notification())
+```
+
+### Using Fallback Mechanism (works in both sync and async modes)
 
 ```python
 # Add an Email channel
@@ -57,16 +78,17 @@ email_channel = EmailChannel(
     smtp_port=587,
     smtp_user="your_user",
     smtp_password="your_password",
-    recipients=[...]  # Can be a list of strings or EmailRecipient objects
+    recipients=['test@example.com']
 )
-notifier.add_channel(email_channel, "email")
+notifier.add_channel(email_channel)
 
 # Set fallback order
 notifier.set_fallback_order(["telegram", "email"])
 
 # Send a notification with fallback
-await notifier.send("Your message with fallback")
-# Note: Errors are logged instead of raised when fallback is enabled
+notifier.send("Your message with fallback")  # For synchronous usage
+# or
+await notifier.send("Your message with fallback")  # For asynchronous usage
 ```
 
 ### Creating and Using a Custom Channel
@@ -85,8 +107,6 @@ class CustomChannel(BaseChannel):
     def __init__(self, custom_param, recipients):
         super().__init__(recipients)
         self.custom_param = custom_param
-        self.validate_config()
-
 
     async def send(self, message, recipients=None):
         logger = logging.getLogger(__name__)
@@ -111,7 +131,7 @@ class CustomChannel(BaseChannel):
 
 # Add a custom channel
 custom_channel = CustomChannel(custom_param="value", recipients=[...])
-notifier.add_channel(custom_channel, "custom")
+notifier.add_channel(custom_channel)
 
 # Send a notification using the custom channel
 await notifier.send("Your custom message")
@@ -119,9 +139,10 @@ await notifier.send("Your custom message")
 
 ## Features
 
-- **Support for multiple channels**: Telegram, Email, and Custom channels.
-- **Fallback mechanism**: ability to specify the order of channels for sending messages in case of failure. Errors are logged instead of raised when fallback is enabled.
-- **Easy setup and use**.
+- **Flexible operation modes**: Support for both synchronous and asynchronous operations
+- **Support for multiple channels**: Telegram, Email, and Custom channels
+- **Fallback mechanism**: ability to specify the order of channels for sending messages in case of failure
+- **Easy setup and use**
 
 ## Requirements
 

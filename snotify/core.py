@@ -1,6 +1,8 @@
 import logging
 from typing import List
 from .channels.base import BaseChannel, BaseRecipient
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 
 def configure_logging(level=logging.INFO):
@@ -29,32 +31,99 @@ def configure_logging(level=logging.INFO):
 
 class Notifier:
     """
-    A class that manages notification channels and handles message delivery with a fallback mechanism.
-
-    This class allows you to add multiple notification channels and define a fallback order for message delivery.
-    If a message fails to send through one channel, it will attempt to send through the next channel in the order.
-    If no fallback order is set, the message will be sent to all channels.
-
-    Methods
-    -------
-    add_channel(channel: BaseChannel, name: str)
-        Adds a notification channel to the manager.
-    set_fallback_order(order: List[str])
-        Sets the order of channels to use in case of a failure. If not set, messages are sent to all channels.
-    async send(message: str, recipients: List[BaseRecipient] = None)
-        Sends a notification using the specified channels.
-
-    Parameters
-    ----------
-    None
+    Synchronous notification manager that provides a blocking interface to send notifications.
+    This is a wrapper around ANotifier that makes asynchronous operations appear synchronous.
 
     Example
     -------
     >>> notifier = Notifier()
-    >>> email_channel = EmailChannel(smtp_server, smtp_port, smtp_user, smtp_password, recipients)
-    >>> notifier.add_channel(email_channel, "email")
-    >>> notifier.set_fallback_order(["email", "telegram"])  # Optional
-    >>> await notifier.send("Hello, World!")
+    >>> notifier.add_channel(telegram_channel)
+    >>> notifier.send("Hello World")  # Blocks until the message is sent
+
+    Methods
+    -------
+    add_channel(channel: BaseChannel, name: str = None)
+        Adds a notification channel to the manager.
+    set_fallback_order(order: List[str])
+        Sets the order of channels to use in case of a failure.
+    send(message: str, recipients: List[BaseRecipient] = None)
+        Sends a notification synchronously using the specified channels.
+    """
+
+    def __init__(self):
+        self.channels = []
+        self.fallback_order = []
+        self._executor = ThreadPoolExecutor()
+
+    def add_channel(self, channel: BaseChannel, name: str = None):
+        """
+        Adds a notification channel to the manager.
+        :param channel: A channel implementing BaseChannel.
+        :param name: Optional name of the channel for use in fallback_order.
+                    If not provided, will be auto-generated from channel class name.
+        """
+        channel.validate_config()
+        if name is None:
+            base_name = channel.__class__.__name__.lower().replace("channel", "")
+            similar_channels = [
+                ch for ch in self.channels if ch["name"].startswith(base_name)
+            ]
+
+            if not similar_channels:
+                name = base_name
+            else:
+                name = f"{base_name}_{len(similar_channels)}"
+
+        self.channels.append({"name": name, "channel": channel})
+
+    def set_fallback_order(self, order: List[str]):
+        """
+        Sets the order of channels to use in case of a failure.
+        :param order: A list of channel names.
+        """
+        self.fallback_order = order
+
+    def send(self, message: str, recipients: List[BaseRecipient] = None):
+        """
+        Sends a notification using the specified channels synchronously.
+        :param message: The message to send.
+        :param recipients: A list of recipients implementing RecipientInterface.
+        """
+
+        async def _async_send():
+            async_notifier = ANotifier()
+            async_notifier.channels = self.channels
+            async_notifier.fallback_order = self.fallback_order
+            await async_notifier.send(message, recipients)
+
+        asyncio.run(_async_send())
+
+    def __del__(self):
+        self._executor.shutdown(wait=False)
+
+
+class ANotifier:
+    """
+    Asynchronous notification manager that provides non-blocking interface to send notifications.
+    This is the base implementation that handles actual message delivery.
+
+    Example
+    -------
+    >>> async def main():
+    >>>     notifier = ANotifier()
+    >>>     notifier.add_channel(telegram_channel)
+    >>>     await notifier.send("Hello World")
+    >>>
+    >>> asyncio.run(main())
+
+    Methods
+    -------
+    add_channel(channel: BaseChannel, name: str = None)
+        Adds a notification channel to the manager.
+    set_fallback_order(order: List[str])
+        Sets the order of channels to use in case of a failure.
+    async send(message: str, recipients: List[BaseRecipient] = None)
+        Sends a notification asynchronously using the specified channels.
     """
 
     def __init__(self):
@@ -91,9 +160,9 @@ class Notifier:
 
     async def send(self, message: str, recipients: List[BaseRecipient] = None):
         """
-        Sends a notification using the specified channels.
+        Sends a notification using the specified channels asynchronously.
         :param message: The message to send.
-        :param recipients: A list of recipients implementing RecipientInterface. If not specified, channel recipients are used.
+        :param recipients: A list of recipients implementing RecipientInterface.
         """
         logger = logging.getLogger(__name__)
 
