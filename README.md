@@ -32,6 +32,24 @@ configure_logging(logging.INFO)
 logging.disable(logging.CRITICAL)
 ```
 
+### Webhook Usage
+
+```python
+from snotify import Notifier, WebhookChannel
+
+# Create an instance of synchronous Notifier
+notifier = Notifier()
+
+# Add a WebhookChannel channel
+webhook_channel = WebhookChannel(
+webhook_url="https://example.com/webhook",
+recipients=["recipient1", "recipient2"]
+)
+notifier.add_channel(webhook_channel)
+
+# Send a notification synchronously
+notifier.send("Your message via Webhook")
+```
 ### Synchronous Usage
 
 ```python
