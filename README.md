@@ -6,6 +6,18 @@ Lightweight notification manager with support for Telegram, email, and custom ch
 
 `snotify` is a library for managing notifications that allows sending messages through various channels such as Telegram, email, and custom channels. It supports both synchronous and asynchronous operations, and includes a fallback mechanism that allows sending messages through alternative channels in case the primary one fails.
 
+#### Supported Notification Channels:
+
+##### snotify currently supports the following channels:
+
+`Telegram`: Instantly send messages to users via the Telegram platform.
+
+`Email`: Deliver notifications directly to users' inboxes.
+
+`Webhook`: Integrate with external systems by sending event data to specified URLs in real time.
+
+`Custom Channels`: Extend functionality by creating and configuring your own notification channels.
+
 ## Installation
 
 Install the library using pip:
@@ -13,6 +25,7 @@ Install the library using pip:
 ```bash
 pip install snotify
 ```
+
 
 ## Usage Example
 
@@ -90,6 +103,26 @@ notifier.send("Your message with fallback")  # For synchronous usage
 # or
 await notifier.send("Your message with fallback")  # For asynchronous usage
 ```
+
+### Webhook Usage
+
+```python
+from snotify import Notifier, WebhookChannel
+
+# Create an instance of synchronous Notifier
+notifier = Notifier()
+
+# Add a WebhookChannel channel
+webhook_channel = WebhookChannel(
+webhook_url="https://example.com/webhook",
+recipients=["recipient1", "recipient2"]
+)
+notifier.add_channel(webhook_channel)
+
+# Send a notification synchronously
+notifier.send("Your message via Webhook")
+```
+
 
 ### Creating and Using a Custom Channel
 
