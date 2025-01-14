@@ -199,6 +199,10 @@ pip install -r requirements.txt
 pip install -r requirements-dev.txt
 ```
 
+## Contributing
+
+We welcome contributions from the community! Please see our [Contributing Guide](CONTRIBUTING.md) for more details on how to get started.
+
 ## License
 
 MIT License. See the LICENSE file for details.
