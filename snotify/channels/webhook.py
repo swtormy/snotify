@@ -22,6 +22,10 @@ class WebhookChannel(BaseChannel):
         The URL of the Webhook.
     recipients : Union[List[BaseRecipient], List[str]]
         A list of recipient objects implementing the BaseRecipient interface or other identifiers in str format.
+    headers : dict, optional
+        A dictionary of HTTP headers to include in the request.
+    body : dict, optional
+        A dictionary representing the body of the request to be sent with each message.
 
     Methods
     -------
@@ -32,10 +36,16 @@ class WebhookChannel(BaseChannel):
     """
 
     def __init__(
-        self, webhook_url: str, recipients: Union[List[BaseRecipient], List[str]]
+        self,
+        webhook_url: str,
+        recipients: Union[List[BaseRecipient], List[str]],
+        headers: dict = None,
+        body: dict = None,
     ):
         super().__init__(recipients)
         self.webhook_url = webhook_url
+        self.headers = headers or {}
+        self.body = body or {}
 
     async def send(self, message: str, recipients: List[BaseRecipient] = None):
         logger = logging.getLogger(__name__)
@@ -45,9 +55,12 @@ class WebhookChannel(BaseChannel):
                 recipient = WebhookRecipient(name=recipient, identifier=recipient)
 
             payload = {"recipient": recipient.get_recipient_id(), "message": message}
+            payload.update(self.body)
 
             async with aiohttp.ClientSession() as session:
-                async with session.post(self.webhook_url, json=payload) as response:
+                async with session.post(
+                    self.webhook_url, json=payload, headers=self.headers
+                ) as response:
                     if response.status == 200:
                         logger.info(f"✅ Sent to {recipient.get_recipient_name()}")
                     else:
